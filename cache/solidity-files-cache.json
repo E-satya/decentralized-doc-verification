@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/home/pratiksha/Desktop/E-satya/decentralized-doc-verification/contracts/DocumentVerfication.sol": {
+      "lastModificationDate": 1725981838239,
+      "contentHash": "84d83335b7d1086e5e95d5deccaa4e0b",
+      "sourceName": "contracts/DocumentVerfication.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "DocumentVerification"
+      ]
+    }
+  }
+}
