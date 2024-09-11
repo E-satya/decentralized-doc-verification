@@ -2,6 +2,9 @@
 
 import "@nomiclabs/hardhat-ethers";
 
+import * as dotenv from "dotenv";
+dotenv.config();
+
 module.exports = {
   solidity: "0.8.24",
   networks: {
@@ -11,9 +14,7 @@ module.exports = {
     },
     sepolia: {
       url: `https://sepolia.infura.io/v3/43babf32ce0346fabbf1c1069418a90b`,
-      accounts: [
-        "6b777a5e8686dcc1075a9ef05dfbe007020df809d44b5d1f185314c4734f4277",
-      ],
+      accounts: [process.env.WALLET_PRIVATE_KEY],
       chainId: 11155111,
     },
   },
