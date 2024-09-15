@@ -1,9 +1,15 @@
 "use client";
 import type { Metadata } from "next";
+import { ethers } from "ethers";
 
 import localFont from "next/font/local";
 import "./globals.css";
-import { ChainId, ThirdwebProvider } from "@thirdweb-dev/react";
+import {
+  ChainId,
+  ThirdwebProvider,
+  ThirdwebSDKProvider,
+} from "@thirdweb-dev/react";
+import { access } from "fs";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -26,17 +32,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  console.log(children, "first");
-
+  //const signer = new ethers.providers.Web3Provider(window.ethereum).getSigner();
+  //console.log(signer,'signer')
+ // const activeChainId = ChainId.Mumbai;
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThirdwebProvider
-          clientId="c3e5c30e3281536429192e2ce3b75b7f"
-          activeChain="sepolia"
+          clientId="1a0f6f7905f465f14989eb22747351fe"
+          activeChain={'sepolia'}
+          
         >
           {children}
         </ThirdwebProvider>
+        
       </body>
     </html>
   );

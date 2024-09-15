@@ -163,3 +163,96 @@ a.secondary {
     filter: invert();
   }
 }
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.header {
+  font-family: "20px";
+  font-weight: bold;
+  text-align: center;
+  color: black;
+  background-color: #f2f2f2; /* Light gray background */
+  padding: 20px;
+  border-radius: 8px; /* Optional: rounded corners */
+  width: 100vw; /* Make sure the header spans the full viewport width */
+  box-sizing: border-box; /* Include padding and border in the width calculation */
+  position: absolute; /* Optional: if you want the header to stay fixed */
+  top: 0; /* Optional: if you want the header to stay at the top */
+  left: 0;
+}
+
+.uploadSection {
+  margin-top:100px;
+}
+
+.uploadButton {
+  margin-top: 80px;
+  padding: 10px 20px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.uploadButton:hover {
+  background-color: #005bb5;
+}
+
+.documentList {
+  margin-top: 30px;
+}
+.documentList h2 {
+  font-size: 24px;
+  margin-bottom: 30px; 
+  color: #333; /* Darker color for the heading */
+}
+
+.documentItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #e3f2fd; /* Soft light background */
+  border: 1px solid #e0e0e0; /* Muted border */
+  border-radius: 8px; /* Rounded corners */
+  margin-bottom: 10px; /* Space between items */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.documentItem:hover {
+  background-color: #f1f1f1; /* Slightly darker background on hover */
+  transform: translateY(-2px); /* Subtle lift effect */
+}
+
+.documentItem p {
+  font-size: 14px;
+  color: #555; /* Muted text color */
+  margin: 0;
+}
+
+.verifyButton {
+  padding: 5px 10px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.verifyButton:hover {
+  background-color: #005bb5;
+}
+
+.verifiedBadge {
+  color: green;
+  font-weight: bold;
+}
