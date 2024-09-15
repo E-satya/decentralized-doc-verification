@@ -7,7 +7,7 @@ import {
   useContractWrite,
   Web3Button,
 } from "@thirdweb-dev/react";
-import {  useState } from "react";
+import { useState } from "react";
 
 import { abi } from "./constant/abi";
 
@@ -17,14 +17,11 @@ interface Document {
   base64?: string;
 }
 
-
 export default function Home() {
+  const myContractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string;
 
   const { mutateAsync: upload } = useStorageUpload();
-  const { contract } = useContract(
-    "0x01a1c045175bDA62F1E246a028353251e0541f45",
-    abi
-  );
+  const { contract } = useContract(myContractAddress, abi);
 
   const { mutateAsync, isLoading, error } = useContractWrite(
     contract,
@@ -76,7 +73,6 @@ export default function Home() {
       reader.readAsArrayBuffer(file);
     });
   };
-
 
   const handleFileChange = (event: any) => {
     if (event.target.files.length > 0) {
@@ -130,7 +126,7 @@ export default function Home() {
             cursor: "pointer",
             transition: "background-color 0.3s ease",
           }}
-          contractAddress={"0x01a1c045175bDA62F1E246a028353251e0541f45"}
+          contractAddress={myContractAddress}
           action={handleUploadClick}
         >
           {" "}
@@ -158,9 +154,8 @@ export default function Home() {
                   cursor: "pointer",
                   transition: "background-color 0.3s ease",
                 }}
-                contractAddress={"0x01a1c045175bDA62F1E246a028353251e0541f45"}
+                contractAddress={myContractAddress}
                 action={() => handleVerifyClick(doc.hash)}
-                // disabled={isVerifyLoading}
               >
                 {verfiyLoading ? "Verifying..." : "Verify"}
               </Web3Button>
