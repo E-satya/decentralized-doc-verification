@@ -1,10 +1,5 @@
 "use client";
-import {
-  ChainId,
-  MediaRenderer,
-  ThirdwebProvider,
-  ThirdwebSDK,
-} from "@thirdweb-dev/react";
+
 import styles from "./page.module.css";
 import {
   useStorageUpload,
@@ -12,17 +7,19 @@ import {
   useContractWrite,
   Web3Button,
 } from "@thirdweb-dev/react";
-import { useEffect, useState } from "react";
-//import { IpfsUploader } from "@thirdweb-dev/storage";
+import {  useState } from "react";
+
 import { abi } from "./constant/abi";
-import { sep } from "path";
+
 interface Document {
   hash: string;
   verified: boolean;
   base64?: string;
 }
 
+
 export default function Home() {
+
   const { mutateAsync: upload } = useStorageUpload();
   const { contract } = useContract(
     "0x01a1c045175bDA62F1E246a028353251e0541f45",
@@ -33,6 +30,8 @@ export default function Home() {
     contract,
     "uploadDocument"
   );
+  const { mutateAsync: verifyDocument, isLoading: verfiyLoading } =
+    useContractWrite(contract, "verifyDocument");
 
   const [file, setFile] = useState(null);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -78,26 +77,6 @@ export default function Home() {
     });
   };
 
-  const storeHashInContract = async (ipfsHash: string) => {
-    if (!contract) {
-      console.error("Contract not found");
-      return;
-    }
-
-    try {
-      console.log("Storing hash in contract:", ipfsHash);
-
-      const hash = ipfsHash.replace(/^ipfs:\/\//, "").split("/")[0];
-      console.log(hash, "hash");
-      // @ts-ignore
-
-      // await tx.wait(); // Wait for transaction to be mined
-      console.log("Hash stored in contract successfully");
-      const tx = await contract.abi;
-    } catch (error) {
-      console.error("Error storing hash in contract:", error);
-    }
-  };
 
   const handleFileChange = (event: any) => {
     if (event.target.files.length > 0) {
@@ -105,9 +84,32 @@ export default function Home() {
     }
   };
 
-  const handleVerifyClick = () => {
-    console.log("Verify Document clicked");
-    // Implement verify document functionality here
+  const handleVerifyClick = async (hash: string) => {
+    try {
+      const result = await verifyDocument({ args: [hash] });
+
+      // @ts-ignore
+
+      const exists = result[0];
+      console.log(exists, "exists");
+      // @ts-ignore
+
+      const uploader = result[1];
+      console.log(uploader, "uploader");
+      // @ts-ignore
+
+      if (exists) {
+        setDocuments((prevDocs) =>
+          prevDocs.map((doc) =>
+            doc.hash === hash ? { ...doc, verified: true } : doc
+          )
+        );
+      } else {
+        alert("Document not found or not verified");
+      }
+    } catch (error) {
+      console.error("Error during verification:", error);
+    }
   };
 
   return (
@@ -130,7 +132,6 @@ export default function Home() {
           }}
           contractAddress={"0x01a1c045175bDA62F1E246a028353251e0541f45"}
           action={handleUploadClick}
-          //disabled={uploading || isLoading}
         >
           {" "}
           {uploading || isLoading ? "Uploading..." : "Upload"}
@@ -146,9 +147,23 @@ export default function Home() {
             {doc.verified ? (
               <span className={styles.verifiedBadge}>✔ Verified</span>
             ) : (
-              <div>
-                <button className={styles.verifyButton}>Verify</button>
-              </div>
+              <Web3Button
+                style={{
+                  backgroundColor: "#28a745",
+                  color: "black",
+                  padding: "8px 16px",
+                  borderRadius: "5px",
+                  border: "none",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  transition: "background-color 0.3s ease",
+                }}
+                contractAddress={"0x01a1c045175bDA62F1E246a028353251e0541f45"}
+                action={() => handleVerifyClick(doc.hash)}
+                // disabled={isVerifyLoading}
+              >
+                {verfiyLoading ? "Verifying..." : "Verify"}
+              </Web3Button>
             )}
           </div>
         ))}
