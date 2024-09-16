@@ -1,8 +1,8 @@
 "use client";
 
 import styles from "./page.module.css";
+
 import {
-  useStorageUpload,
   useContract,
   useAddress,
   useDisconnect,
@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 
 import { abi } from "./constant/abi";
+import { uploadFile } from "../utils/uploadFile";
 
 interface Document {
   hash: string;
@@ -22,7 +23,6 @@ interface Document {
 export default function Home() {
   const myContractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string;
 
-  const { mutateAsync: upload } = useStorageUpload();
   const { contract } = useContract(myContractAddress, abi);
 
   const { mutateAsync, isLoading, error } = useContractWrite(
@@ -34,8 +34,7 @@ export default function Home() {
 
   const [file, setFile] = useState(null);
   const [documents, setDocuments] = useState<Document[]>([]);
-  // const [uploadedURI, setUploadedURI] = useState("");
-  // const [uploading, setUploading] = useState(false);
+
   const address = useAddress();
   const disconnect = useDisconnect();
 
@@ -66,24 +65,6 @@ export default function Home() {
     }
   };
 
-  const uploadFile = async (file: File): Promise<string[]> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const dataToUpload = new Uint8Array(reader.result as ArrayBuffer);
-          const uris = await upload({ data: [dataToUpload] });
-          console.log("File uploaded successfully:", uris);
-          resolve(uris);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = () => reject(new Error("Error reading file"));
-      reader.readAsArrayBuffer(file);
-    });
-  };
-
   const handleFileChange = (event: any) => {
     if (event.target.files.length > 0) {
       setFile(event.target.files[0]);
@@ -92,18 +73,16 @@ export default function Home() {
 
   const handleVerifyClick = async (hash: string) => {
     try {
-      console.log(hash, " hash");
       const result = await verifyDocument({ args: [hash] });
-      console.log(result, "result");
 
       // @ts-ignore
 
       const exists = result[0];
-      console.log(exists, "exists");
+
       // @ts-ignore
 
       const uploader = result[1];
-      console.log(uploader, "uploader");
+
       // @ts-ignore
 
       if (exists) {
@@ -122,7 +101,6 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      {/* <h1 className={styles.header}>Welcome to Document Verify</h1> */}
       <header className={styles.header}>
         <h1>Welcome to Document Verify</h1>
         <div className={styles.headerActions}>
@@ -185,10 +163,15 @@ export default function Home() {
         {documents.length === 0 && <p>No documents uploaded yet.</p>}
         {documents.map((doc, index) => (
           <div key={index} className={styles.documentItem}>
-            <p>
-              <strong>IPFS Hash: </strong>
-              {doc.hash}
-            </p>
+            <img
+              src={`https://gateway.pinata.cloud/ipfs/${doc.hash}`}
+              alt="Document"
+              style={{ width: "150px", height: "150px" }}
+              onError={(e) => {
+                // Handle error if the document is not an image
+                e.currentTarget.src = "/default-preview.png";
+              }}
+            />
             {doc.verified ? (
               <span className={styles.verifiedBadge}>✔ Verified</span>
             ) : (
