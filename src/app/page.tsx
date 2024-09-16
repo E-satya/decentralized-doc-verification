@@ -1,53 +1,71 @@
 "use client";
-import {
-  ChainId,
-  MediaRenderer,
-  ThirdwebProvider,
-  ThirdwebSDK,
-} from "@thirdweb-dev/react";
+
 import styles from "./page.module.css";
 import {
   useStorageUpload,
   useContract,
+  useAddress,
+  useDisconnect,
   useContractWrite,
   Web3Button,
 } from "@thirdweb-dev/react";
 import { useState } from "react";
+
 import { abi } from "./constant/abi";
-import { sep } from "path";
+
+interface Document {
+  hash: string;
+  verified: boolean;
+  base64?: string;
+}
 
 export default function Home() {
+  const myContractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string;
+
   const { mutateAsync: upload } = useStorageUpload();
-  const { contract } = useContract(
-    "0x01a1c045175bDA62F1E246a028353251e0541f45",
-    abi
-  );
+  const { contract } = useContract(myContractAddress, abi);
 
   const { mutateAsync, isLoading, error } = useContractWrite(
     contract,
     "uploadDocument"
   );
+  const { mutateAsync: verifyDocument, isLoading: verfiyLoading } =
+    useContractWrite(contract, "verifyDocument");
 
   const [file, setFile] = useState(null);
-  const [uploadedURI, setUploadedURI] = useState("");
+  const [documents, setDocuments] = useState<Document[]>([]);
+  // const [uploadedURI, setUploadedURI] = useState("");
+  // const [uploading, setUploading] = useState(false);
+  const address = useAddress();
+  const disconnect = useDisconnect();
 
   const handleUploadClick = async () => {
     if (file) {
       try {
-        console.log("Uploading file:", file);
         const uris = await uploadFile(file);
-        console.log(uris, "uris");
-        if (uris && uris.length > 0) {
-          const ipfsHash = uris[0];
-          console.log(ipfsHash, "hash");
-          setUploadedURI(ipfsHash);
-          // await storeHashInContract(ipfsHash);
+
+        const ipfsHash = uris[0].replace(/^ipfs:\/\//, "").split("/")[0];
+        await mutateAsync({ args: [ipfsHash] });
+
+        // @ts-ignore
+        setDocuments((prev) => [...prev, { hash: ipfsHash, verified: false }]);
+        alert("Document uploaded and stored on blockchain successfully!");
+      } catch (error: any) {
+        if (error?.message) {
+          alert(
+            "MetaMask Error: The selected document with this IPFS hash has already been uploaded to the blockchain."
+          );
+        } else {
+          alert("An unknown error occurred during the upload.");
         }
-      } catch (error) {
-        console.error("Error uploading file:", error);
+      } finally {
+        //setUploading(false);
       }
+    } else {
+      alert("Please select a file to upload");
     }
   };
+
   const uploadFile = async (file: File): Promise<string[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -66,85 +84,134 @@ export default function Home() {
     });
   };
 
-  const storeHashInContract = async (ipfsHash: string) => {
-    if (!contract) {
-      console.error("Contract not found");
-      return;
-    }
-
-    try {
-      console.log("Storing hash in contract:", ipfsHash);
-
-      const hash = ipfsHash.replace(/^ipfs:\/\//, "").split("/")[0];
-      console.log(hash, "hash");
-      // @ts-ignore
-
-      // await tx.wait(); // Wait for transaction to be mined
-      console.log("Hash stored in contract successfully");
-      const tx = await contract.abi;
-    } catch (error) {
-      console.error("Error storing hash in contract:", error);
-    }
-  };
-
   const handleFileChange = (event: any) => {
     if (event.target.files.length > 0) {
       setFile(event.target.files[0]);
     }
   };
 
-  const handleVerifyClick = () => {
-    console.log("Verify Document clicked");
-    // Implement verify document functionality here
+  const handleVerifyClick = async (hash: string) => {
+    try {
+      console.log(hash, " hash");
+      const result = await verifyDocument({ args: [hash] });
+      console.log(result, "result");
+
+      // @ts-ignore
+
+      const exists = result[0];
+      console.log(exists, "exists");
+      // @ts-ignore
+
+      const uploader = result[1];
+      console.log(uploader, "uploader");
+      // @ts-ignore
+
+      if (exists) {
+        setDocuments((prevDocs) =>
+          prevDocs.map((doc) =>
+            doc.hash === hash ? { ...doc, verified: true } : doc
+          )
+        );
+      } else {
+        alert("Document not found or not verified");
+      }
+    } catch (error) {
+      console.error("Error during verification:", error);
+    }
   };
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <h1>Document Management</h1>
-        <div className={styles.ctas}>
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className={styles.fileInput}
-          />
-          {/* <button className={styles.primaryButton} onClick={handleUploadClick}>
-            Document upload
-          </button> */}
-          <button className={styles.primaryButton} onClick={handleUploadClick}>
-            Upload Document
-          </button>
-          <Web3Button
-            contractAddress={"0x01a1c045175bDA62F1E246a028353251e0541f45"}
-            // Calls the "setName" function on your smart contract with "My Name" as the first argument
-            action={async () => {
-              if (uploadedURI) {
-                const ipfsHash = uploadedURI
-                  .replace(/^ipfs:\/\//, "")
-                  .split("/")[0];
-                console.log(ipfsHash, "hash");
-                await mutateAsync({ args: [ipfsHash] });
-              } else {
-                console.error("No uploaded document URI found");
-              }
-            }}
-          >
-            Send Transaction
-          </Web3Button>
-          <button
-            className={styles.secondaryButton}
-            //onClick={handleVerifyClick}
-          >
-            Verify Document
-          </button>
+    <div className={styles.container}>
+      {/* <h1 className={styles.header}>Welcome to Document Verify</h1> */}
+      <header className={styles.header}>
+        <h1>Welcome to Document Verify</h1>
+        <div className={styles.headerActions}>
+          {address ? (
+            <div className={styles.address}>
+              <p>{address}</p>
+              <button
+                className={styles.disconnectButton}
+                onClick={() => disconnect()}
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <Web3Button
+              style={{
+                backgroundColor: "#007bff",
+                color: "black",
+                padding: "8px 16px",
+                borderRadius: "5px",
+                border: "none",
+                fontSize: "14px",
+                cursor: "pointer",
+                transition: "background-color 0.3s ease",
+              }}
+              contractAddress={myContractAddress}
+              action={() => {}}
+            >
+              Connect Wallet
+            </Web3Button>
+          )}
         </div>
-        {uploadedURI && (
-          <div>
-            <h2>Uploaded Document</h2>
-            <MediaRenderer src={uploadedURI} />
+      </header>
+
+      <div className={styles.uploadSection}>
+        <input type="file" onChange={handleFileChange} />
+
+        <Web3Button
+          style={{
+            backgroundColor: "#007bff",
+            color: "black",
+            padding: "8px 16px",
+            borderRadius: "5px",
+            border: "none",
+            fontSize: "14px",
+            cursor: "pointer",
+            transition: "background-color 0.3s ease",
+          }}
+          contractAddress={myContractAddress}
+          action={handleUploadClick}
+        >
+          {" "}
+          {isLoading ? "Uploading..." : "Upload"}
+        </Web3Button>
+      </div>
+      <div className={styles.divider}></div>
+
+      <div className={styles.documentList}>
+        <h2>Uploaded Documents</h2>
+        {documents.length === 0 && <p>No documents uploaded yet.</p>}
+        {documents.map((doc, index) => (
+          <div key={index} className={styles.documentItem}>
+            <p>
+              <strong>IPFS Hash: </strong>
+              {doc.hash}
+            </p>
+            {doc.verified ? (
+              <span className={styles.verifiedBadge}>✔ Verified</span>
+            ) : (
+              <Web3Button
+                style={{
+                  backgroundColor: "#28a745",
+                  color: "black",
+                  padding: "8px 16px",
+                  borderRadius: "5px",
+                  border: "none",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  transition: "background-color 0.3s ease",
+                }}
+                contractAddress={myContractAddress}
+                action={() => handleVerifyClick(doc.hash)}
+              >
+                {verfiyLoading ? "Verifying..." : "Verify"}
+              </Web3Button>
+            )}
           </div>
-        )}
-      </main>
+        ))}
+      </div>
     </div>
   );
 }
