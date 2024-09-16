@@ -4,6 +4,8 @@ import styles from "./page.module.css";
 import {
   useStorageUpload,
   useContract,
+  useAddress,
+  useDisconnect,
   useContractWrite,
   Web3Button,
 } from "@thirdweb-dev/react";
@@ -32,24 +34,32 @@ export default function Home() {
 
   const [file, setFile] = useState(null);
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [uploadedURI, setUploadedURI] = useState("");
-  const [uploading, setUploading] = useState(false);
+  // const [uploadedURI, setUploadedURI] = useState("");
+  // const [uploading, setUploading] = useState(false);
+  const address = useAddress();
+  const disconnect = useDisconnect();
 
   const handleUploadClick = async () => {
     if (file) {
       try {
-        console.log("Uploading file:", file);
         const uris = await uploadFile(file);
-        setUploadedURI(uris[0]);
+
         const ipfsHash = uris[0].replace(/^ipfs:\/\//, "").split("/")[0];
         await mutateAsync({ args: [ipfsHash] });
+
         // @ts-ignore
         setDocuments((prev) => [...prev, { hash: ipfsHash, verified: false }]);
         alert("Document uploaded and stored on blockchain successfully!");
-      } catch (error) {
-        console.error("Error uploading file:", error);
+      } catch (error: any) {
+        if (error?.message) {
+          alert(
+            "MetaMask Error: The selected document with this IPFS hash has already been uploaded to the blockchain."
+          );
+        } else {
+          alert("An unknown error occurred during the upload.");
+        }
       } finally {
-        setUploading(false);
+        //setUploading(false);
       }
     } else {
       alert("Please select a file to upload");
@@ -82,7 +92,9 @@ export default function Home() {
 
   const handleVerifyClick = async (hash: string) => {
     try {
+      console.log(hash, " hash");
       const result = await verifyDocument({ args: [hash] });
+      console.log(result, "result");
 
       // @ts-ignore
 
@@ -110,7 +122,40 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.header}>Welcome to Document Verify</h1>
+      {/* <h1 className={styles.header}>Welcome to Document Verify</h1> */}
+      <header className={styles.header}>
+        <h1>Welcome to Document Verify</h1>
+        <div className={styles.headerActions}>
+          {address ? (
+            <div className={styles.address}>
+              <p>{address}</p>
+              <button
+                className={styles.disconnectButton}
+                onClick={() => disconnect()}
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <Web3Button
+              style={{
+                backgroundColor: "#007bff",
+                color: "black",
+                padding: "8px 16px",
+                borderRadius: "5px",
+                border: "none",
+                fontSize: "14px",
+                cursor: "pointer",
+                transition: "background-color 0.3s ease",
+              }}
+              contractAddress={myContractAddress}
+              action={() => {}}
+            >
+              Connect Wallet
+            </Web3Button>
+          )}
+        </div>
+      </header>
 
       <div className={styles.uploadSection}>
         <input type="file" onChange={handleFileChange} />
@@ -130,16 +175,20 @@ export default function Home() {
           action={handleUploadClick}
         >
           {" "}
-          {uploading || isLoading ? "Uploading..." : "Upload"}
+          {isLoading ? "Uploading..." : "Upload"}
         </Web3Button>
       </div>
+      <div className={styles.divider}></div>
 
       <div className={styles.documentList}>
         <h2>Uploaded Documents</h2>
         {documents.length === 0 && <p>No documents uploaded yet.</p>}
         {documents.map((doc, index) => (
           <div key={index} className={styles.documentItem}>
-            <p>IPFS Hash: {doc.hash}</p>
+            <p>
+              <strong>IPFS Hash: </strong>
+              {doc.hash}
+            </p>
             {doc.verified ? (
               <span className={styles.verifiedBadge}>✔ Verified</span>
             ) : (
