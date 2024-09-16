@@ -13,7 +13,7 @@ module.exports = {
       chainId: 31337,
     },
     sepolia: {
-      url: `https://sepolia.infura.io/v3/43babf32ce0346fabbf1c1069418a90b`,
+      url: `${process.env.NETWORK_URL}`,
       accounts: [process.env.WALLET_PRIVATE_KEY],
       chainId: 11155111,
     },
