@@ -189,7 +189,8 @@ export default function Home() {
                 contractAddress={myContractAddress}
                 action={() => handleVerifyClick(doc.hash)}
               >
-                {verfiyLoading ? "Verifying..." : "Verify"}
+              
+            verify
               </Web3Button>
             )}
           </div>
