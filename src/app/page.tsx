@@ -100,7 +100,7 @@ export default function Home() {
   };
 
   return (
-    <div className={styles.container}>
+  <div className={styles.container}>
       <header className={styles.header}>
         <h1>Welcome to Document Verify</h1>
         <div className={styles.headerActions}>
