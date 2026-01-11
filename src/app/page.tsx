@@ -49,6 +49,7 @@ export default function Home() {
         // @ts-ignore
         setDocuments((prev) => [...prev, { hash: ipfsHash, verified: false }]);
         alert("Document uploaded and stored on blockchain successfully!");
+        setFile(null); // Reset file after successful upload
       } catch (error: any) {
         if (error?.message) {
           alert(
@@ -102,7 +103,7 @@ export default function Home() {
   return (
   <div className={styles.container}>
       <header className={styles.header}>
-        <h1>Welcome to Document Verify</h1>
+        <h1>Welcome to Decentralized Document Verification</h1>
         <div className={styles.headerActions}>
           {address ? (
             <div className={styles.address}>
@@ -136,6 +137,7 @@ export default function Home() {
       </header>
 
       <div className={styles.uploadSection}>
+        <h3>Upload New Document</h3>
         <input type="file" onChange={handleFileChange} />
 
         <Web3Button
@@ -160,7 +162,12 @@ export default function Home() {
 
       <div className={styles.documentList}>
         <h2>Uploaded Documents</h2>
-        {documents.length === 0 && <p>No documents uploaded yet.</p>}
+        {documents.length === 0 && (
+          <p>
+            No documents uploaded yet. Start by uploading your first document
+            above.
+          </p>
+        )}
         {documents.map((doc, index) => (
           <div key={index} className={styles.documentItem}>
             <img
@@ -189,8 +196,7 @@ export default function Home() {
                 contractAddress={myContractAddress}
                 action={() => handleVerifyClick(doc.hash)}
               >
-              
-            verify
+                Verify Document
               </Web3Button>
             )}
           </div>
