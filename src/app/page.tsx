@@ -13,6 +13,7 @@ import { useState } from "react";
 
 import { abi } from "./constant/abi";
 import { uploadFile } from "../utils/uploadFile";
+import Footer from "@/components/footer";
 
 
 interface Document {
@@ -200,6 +201,7 @@ export default function Home() {
           </div>
         ))}
       </div>
+      <Footer />
     </div>
   );
 }
